@@ -1,0 +1,471 @@
+Good. Now we will go into **Senior / FAANG-level Promise + Event Loop interview questions**.
+These questions test **deep understanding of Event Loop, Microtask Queue, and Promise chaining**.
+
+Try to **predict output first** before reading explanation.
+
+---
+
+# 1️⃣ FAANG Question #1
+
+```javascript
+console.log("Start");
+
+setTimeout(() => {
+  console.log("Timeout");
+}, 0);
+
+Promise.resolve()
+  .then(() => {
+    console.log("Promise1");
+  })
+  .then(() => {
+    console.log("Promise2");
+  });
+
+console.log("End");
+```
+
+### Output
+
+```
+Start
+End
+Promise1
+Promise2
+Timeout
+```
+
+### Why
+
+Execution order:
+
+```
+Call Stack
+Start
+End
+
+Microtask Queue
+Promise1
+Promise2
+
+Macrotask Queue
+Timeout
+```
+
+Event loop rule:
+
+```
+Call Stack → Microtask → Macrotask
+```
+
+---
+
+# 2️⃣ FAANG Question #2 (Very Common)
+
+```javascript
+console.log("Start");
+
+setTimeout(() => console.log("Timeout"), 0);
+
+Promise.resolve().then(() => {
+  console.log("Promise1");
+
+  setTimeout(() => console.log("Timeout inside Promise"), 0);
+});
+
+Promise.resolve().then(() => {
+  console.log("Promise2");
+});
+
+console.log("End");
+```
+
+### Output
+
+```
+Start
+End
+Promise1
+Promise2
+Timeout
+Timeout inside Promise
+```
+
+### Explanation
+
+Queues:
+
+```
+Microtasks
+Promise1
+Promise2
+
+Macrotasks
+Timeout
+Timeout inside Promise
+```
+
+---
+
+# 3️⃣ FAANG Question #3
+
+```javascript
+Promise.resolve()
+.then(() => {
+  console.log("A");
+  return Promise.resolve("B");
+})
+.then((val) => {
+  console.log(val);
+});
+```
+
+### Output
+
+```
+A
+B
+```
+
+Because **Promises are flattened automatically**.
+
+JS waits for returned promise.
+
+---
+
+# 4️⃣ FAANG Question #4 (Hard)
+
+```javascript
+console.log("1");
+
+setTimeout(() => {
+  console.log("2");
+}, 0);
+
+Promise.resolve()
+.then(() => {
+  console.log("3");
+  return Promise.resolve();
+})
+.then(() => {
+  console.log("4");
+});
+
+console.log("5");
+```
+
+### Output
+
+```
+1
+5
+3
+4
+2
+```
+
+Reason:
+
+```
+Call Stack
+1
+5
+
+Microtasks
+3
+4
+
+Macrotasks
+2
+```
+
+---
+
+# 5️⃣ FAANG Question #5 (Nested Promise)
+
+```javascript
+Promise.resolve()
+.then(() => {
+  console.log("1");
+
+  Promise.resolve().then(() => {
+    console.log("2");
+  });
+})
+.then(() => {
+  console.log("3");
+});
+```
+
+### Output
+
+```
+1
+2
+3
+```
+
+Explanation:
+
+When microtask runs, **new microtasks are added immediately**.
+
+Queue becomes:
+
+```
+1
+2
+3
+```
+
+---
+
+# 6️⃣ FAANG Question #6 (Very Tricky)
+
+```javascript
+setTimeout(() => console.log("Timeout"), 0);
+
+Promise.resolve()
+.then(() => {
+  console.log("Promise1");
+})
+.then(() => {
+  console.log("Promise2");
+  setTimeout(() => console.log("Timeout inside"), 0);
+})
+.then(() => {
+  console.log("Promise3");
+});
+```
+
+### Output
+
+```
+Promise1
+Promise2
+Promise3
+Timeout
+Timeout inside
+```
+
+Because **all Promise microtasks execute before macrotasks**.
+
+---
+
+# 7️⃣ FAANG Question #7 (Hard)
+
+```javascript
+console.log("Start");
+
+Promise.resolve().then(() => {
+  console.log("Promise1");
+
+  Promise.resolve().then(() => {
+    console.log("Promise2");
+  });
+});
+
+setTimeout(() => {
+  console.log("Timeout");
+}, 0);
+
+console.log("End");
+```
+
+### Output
+
+```
+Start
+End
+Promise1
+Promise2
+Timeout
+```
+
+Why?
+
+Microtasks are processed **until queue is empty**.
+
+---
+
+# 8️⃣ FAANG Question #8 (Super Tricky)
+
+```javascript
+console.log("A");
+
+setTimeout(() => console.log("B"), 0);
+
+Promise.resolve()
+.then(() => {
+  console.log("C");
+})
+.then(() => {
+  console.log("D");
+
+  setTimeout(() => console.log("E"), 0);
+})
+.then(() => {
+  console.log("F");
+});
+
+console.log("G");
+```
+
+### Output
+
+```
+A
+G
+C
+D
+F
+B
+E
+```
+
+---
+
+# 9️⃣ FAANG Question #9
+
+```javascript
+Promise.resolve(1)
+.then((x) => {
+  console.log(x);
+  return x + 1;
+})
+.then((x) => {
+  console.log(x);
+  return Promise.resolve(x + 1);
+})
+.then((x) => {
+  console.log(x);
+});
+```
+
+### Output
+
+```
+1
+2
+3
+```
+
+---
+
+# 🔟 FAANG Question #10 (Most Difficult)
+
+```javascript
+console.log("Start");
+
+setTimeout(() => {
+  console.log("Timeout1");
+}, 0);
+
+Promise.resolve()
+.then(() => {
+  console.log("Promise1");
+})
+.then(() => {
+  setTimeout(() => {
+    console.log("Timeout2");
+  }, 0);
+});
+
+Promise.resolve().then(() => {
+  console.log("Promise2");
+});
+
+console.log("End");
+```
+
+### Output
+
+```
+Start
+End
+Promise1
+Promise2
+Timeout1
+Timeout2
+```
+
+---
+
+# 🧠 Senior JavaScript Interview Expectation
+
+For **8–10 years frontend engineer**, interviewers expect you to know:
+
+### 1️⃣ Event Loop Architecture
+
+```
+Call Stack
+↓
+Microtask Queue (Promise, queueMicrotask)
+↓
+Macrotask Queue (setTimeout, setInterval)
+```
+
+---
+
+### 2️⃣ Promise Internals
+
+```
+Promise
+  state
+  result
+  handlers
+```
+
+---
+
+### 3️⃣ Promise Chaining
+
+```
+then → always returns new promise
+```
+
+---
+
+### 4️⃣ Promise Flattening
+
+```
+Promise.resolve(Promise)
+→ unwrap
+```
+
+---
+
+### 5️⃣ Microtask Priority
+
+```
+Microtasks always run before Macrotasks
+```
+
+---
+
+# ⭐ Senior Interview Tip
+
+When answering Promise output questions, always say this order:
+
+```
+1. Synchronous code
+2. Microtasks (Promises)
+3. Macrotasks (Timers)
+```
+
+Interviewers love this answer.
+
+---
+
+If you want, I can also show:
+
+**🔥 15 JavaScript output questions that appear in Google / Amazon / Uber interviews**
+
+They combine:
+
+* **Closures**
+* **Event loop**
+* **Promises**
+* **Hoisting**
+* **this binding**
+
+These are **the hardest frontend interview questions**.
